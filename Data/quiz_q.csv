@@ -1,0 +1,41 @@
+Qn_No,Question,Stream
+Q1,"If you see a rainbow, do you wonder how it forms?",Science
+Q2,Do you enjoy looking at the stars or moon at night?,Science
+Q3,Do you get curious about why plants grow towards sunlight?,Science
+Q4,"Do you like doing small experiments, like mixing vinegar and baking soda?",Science
+Q5,"Do you enjoy watching shows about animals, planets, or nature?",Science
+Q6,Do you ask questions like 'why is the sky blue' or 'why do leaves fall'?,Science
+Q7,Do you enjoy solving riddles that make you think deeply?,Science
+Q8,"Do you like observing ants, insects, or birds and how they behave?",Science
+Q9,Do you enjoy reading science facts or fun science stories?,Science
+Q10,Do you try to guess how a magic trick or science toy works?,Science
+Q11,"Do you enjoy playing games that involve money, like Monopoly?",Commerce
+Q12,Do you get excited about saving your pocket money?,Commerce
+Q13,Do you compare prices before buying something?,Commerce
+Q14,Do you think about how shops decide the price of items?,Commerce
+Q15,Do you enjoy keeping track of your expenses?,Commerce
+Q16,Do you like watching shows or videos about business people?,Commerce
+Q17,Do you find it fun to calculate discounts during shopping?,Commerce
+Q18,Do you wonder how banks work when people save or borrow money?,Commerce
+Q19,Do you like to plan how to spend money for a party or trip?,Commerce
+Q20,Do you enjoy maths problems that involve money or numbers?,Commerce
+Q21,"Do you enjoy drawing, painting, or coloring in your free time?",Arts
+Q22,"Do you like writing short stories, poems, or a diary?",Arts
+Q23,"Do you enjoy singing, dancing, or acting in front of others?",Arts
+Q24,Do you enjoy decorating your room or making it look nice?,Arts
+Q25,"Do you feel happy when you create something new, like crafts or designs?",Arts
+Q26,"Do you enjoy watching plays, movies, or music shows?",Arts
+Q27,Do you like imagining and making up new ideas or characters?,Arts
+Q28,Do you enjoy photography or clicking pictures on your phone?,Arts
+Q29,"Do you like designing clothes, posters, or art projects?",Arts
+Q30,Do you enjoy telling stories to friends or younger kids?,Arts
+Q31,Do you enjoy fixing things when they are broken?,Vocational
+Q32,"Do you like building things with blocks, tools, or materials?",Vocational
+Q33,Do you enjoy cooking or helping in the kitchen?,Vocational
+Q34,Do you like planting trees or working in the garden?,Vocational
+Q35,Do you enjoy repairing small gadgets like toys or torches?,Vocational
+Q36,Do you like learning how machines or engines work?,Vocational
+Q37,Do you enjoy doing household repairs with elders?,Vocational
+Q38,Do you like trying hands-on work more than just reading books?,Vocational
+Q39,Do you enjoy drawing plans or making small models of things?,Vocational
+Q40,"Do you enjoy helping in repairing bikes, fans, or household items?",Vocational
