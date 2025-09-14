@@ -6,16 +6,15 @@ import os
 file_csv = r"C:\Project\career_advisor\Data\quiz_q.csv"
 df = pd.read_csv(file_csv)
 
-# Normalize column names so we always use "Qn_No", "Question", "Stream"
+# Normalize column names
 if {"QuestionNo", "QuestionText", "Stream"}.issubset(df.columns):
     df = df.rename(columns={"QuestionNo": "Qn_No", "QuestionText": "Question"})
 elif {"Qn_No", "Question", "Stream"}.issubset(df.columns):
     pass
 elif df.shape[0] == 1:
-    # if file is in 1-row form (questions as columns), transpose
     df = df.T.reset_index()
     df.columns = ["Qn_No", "Question"]
-    # create Stream mapping from Q number ranges (fallback)
+    
     def q_to_stream(q):
         n = int(str(q).lstrip("Q").lstrip("q"))
         if 1 <= n <= 10:
@@ -25,84 +24,101 @@ elif df.shape[0] == 1:
         if 21 <= n <= 30:
             return "Arts"
         return "Vocational"
+    
     df["Stream"] = df["Qn_No"].apply(q_to_stream)
 else:
-    st.error("Unexpected CSV format. Please ensure your CSV has either (QuestionNo, QuestionText, Stream) or (Q1..Q40 as one row).")
+    st.error("Unexpected CSV format.")
     st.stop()
 
 # ---------- Page UI ----------
 st.title("🎓 Career Advisor Quiz")
 st.write("Rate each question: 1 (Not Like), 2 (Moderate), 3 (Like)")
 
-# Ask Student ID first
-student_id = st.text_input("👉 Please enter your Student ID to start:")
-
+# ---------- Student ID ----------
+student_id = st.text_input("👉 Enter your Student ID:")
 if not student_id:
-    st.warning("⚠️ Please enter your Student ID above to start the quiz.")
+    st.warning("⚠️ Please enter Student ID to start.")
     st.stop()
 
-st.success(f"Welcome Student {student_id}! Please answer the questions below 👇")
+st.success(f"Welcome Student {student_id}! Answer the questions below 👇")
 
-# ---------- Progress placeholder at top ----------
-progress_placeholder = st.empty()   # will be updated after we collect current responses
-
-# ---------- Render questions ----------
+# ---------- Quiz Questions ----------
 responses = {}
+
 for _, row in df.iterrows():
-    qn = row["Qn_No"]           # e.g. "Q1"
+    qn = row["Qn_No"]
     question = row["Question"]
-    # IMPORTANT: use qn directly in label (not f"Q{qn}") to avoid QQ1 problem
-    label = f"{qn}: {question}"
-    # Use a unique key per student so multiple students don't clobber each other: studentid_Qn
     key = f"{student_id}_{qn}"
-    resp = st.radio(label, [1, 2, 3], index=None, key=key)
-    responses[qn] = resp
+    
+    # Use radio buttons - all options visible, no preselection
+    resp = st.radio(
+        f"{qn}: {question}",
+        options=[1, 2, 3],
+        key=key,
+        index=None  # No preselection
+    )
+    
+    if resp is not None:
+        responses[qn] = resp
 
-# ---------- Update the progress bar (placed at the top) ----------
-answered_count = sum(1 for v in responses.values() if v is not None)
-progress = answered_count / len(df) if len(df) > 0 else 0.0
-progress_placeholder.progress(progress)
-progress_placeholder.markdown(f"**Answered:** {answered_count}/{len(df)}")
+# ---------- Check if all questions answered ----------
+all_answered = len(responses) == len(df)
 
-# ---------- Submit handling ----------
-if st.button("Submit"):
-    if None in responses.values():
-        st.error("⚠️ Please answer all questions before submitting.")
+# ---------- Calculate scores and handle ties OUTSIDE submit button ----------
+final_stream = None
+if all_answered:
+    # Calculate stream scores
+    stream_scores = {}
+    for qn, ans in responses.items():
+        stream = df.loc[df["Qn_No"] == qn, "Stream"].values[0]
+        stream_scores[stream] = stream_scores.get(stream, 0) + int(ans)
+
+    # Determine highest score(s)
+    max_score = max(stream_scores.values())
+    top_streams = [s for s, score in stream_scores.items() if score == max_score]
+
+    # Handle tie OUTSIDE submit button
+    if len(top_streams) > 1:
+        st.warning(f"🎯 Tie detected! Top streams: {', '.join(top_streams)}")
+        final_stream = st.radio(
+            "Please select your preferred stream:",
+            options=top_streams,
+            key=f"{student_id}_tie_break",
+            index=None
+        )
     else:
-        # Build row to save
-        student_row = {"Student_ID": student_id}
-        for qn, ans in responses.items():
-            student_row[qn] = ans
+        final_stream = top_streams[0]
 
-        student_df = pd.DataFrame([student_row])
-        out_file = "C:\Project\career_advisor\Data\student_responses.csv"
-
-        # Append or create
+# ---------- Submit ----------
+if all_answered and final_stream is not None:
+    if st.button("Submit"):
+        # Create responses string in order of question numbers
+        sorted_qns = sorted(responses.keys(), key=lambda x: int(str(x).lstrip("Q").lstrip("q")))
+        responses_string = ",".join([str(responses[qn]) for qn in sorted_qns])
+        
+        # Create single row for this student
+        student_data = {
+            "Student_ID": student_id,
+            "Responses": responses_string,
+            "Stream": final_stream
+        }
+        
+        student_df = pd.DataFrame([student_data])
+        
+        out_file = r"C:\Project\career_advisor\Data\student_responses.csv"
         if os.path.exists(out_file):
             student_df.to_csv(out_file, mode="a", header=False, index=False)
         else:
             student_df.to_csv(out_file, index=False)
 
-        # Recommendation logic
-        stream_scores = {}
-        for qn, ans in responses.items():
-            stream = df.loc[df["Qn_No"] == qn, "Stream"].values[0]
-            stream_scores[stream] = stream_scores.get(stream, 0) + int(ans)
-
-        # Sort & display
-        sorted_streams = sorted(stream_scores.items(), key=lambda x: x[1], reverse=True)
-        st.success(f"✅ Student {student_id}, your responses have been recorded!")
-
-        st.subheader("📊 Your Recommended Streams")
-        for stream, score in sorted_streams:
+        st.success(f"✅ Responses recorded with final stream: {final_stream}")
+        st.subheader("📊 Stream Scores")
+        for stream, score in stream_scores.items():
             st.write(f"**{stream}** → Score: {score}")
+            
+        st.write(f"**Your Responses:** {responses_string}")
 
-        top_score = sorted_streams[0][1]
-        top_streams = [s for s, sc in sorted_streams if sc == top_score]
-        st.markdown(f"🎯 **Best Fit Stream(s): {', '.join(top_streams)}**")
-
-        # Optional: quick bar chart visualization
-        try:
-            st.bar_chart(pd.Series({k: v for k, v in stream_scores.items()}))
-        except Exception:
-            pass
+elif not all_answered:
+    st.error("⚠️ Please answer all questions before submitting.")
+elif final_stream is None:
+    st.error("⚠️ Please select your preferred stream to continue.")
